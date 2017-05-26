@@ -2,20 +2,20 @@ const events = require('events');
 const elasticsearch = require('elasticsearch');
 
 const eventEmitter = new events.EventEmitter();
-
 const {
   error,
   log,
   info
 } = require('../utils');
+const { ELASTIC_AUTH, ELASTIC_HOST } = process.env;
 
 let connected = false;
 
 const client = new elasticsearch.Client({
   host: [
     {
-      host: 'localhost',
-      auth: 'elastic:changeme'
+      host: ELASTIC_HOST,
+      auth: ELASTIC_AUTH
     }
   ]
 });
