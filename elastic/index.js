@@ -8,6 +8,7 @@ const {
   info
 } = require('../utils');
 const { ELASTIC_AUTH, ELASTIC_HOST } = process.env;
+error(ELASTIC_AUTH + ELASTIC_HOST);
 
 let connected = false;
 

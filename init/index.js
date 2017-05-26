@@ -1,9 +1,10 @@
+require('dotenv').config();
 const milkDiscourse = require('./discourse');
 const getYoutubeData = require('./youtube');
 const getChallengeData = require('./challenges');
 const { deleteAll } = require('../elastic');
 
-module.exports = function init() {
+function init() {
   deleteAll();
   // allow time for the delete Op to complete
   setTimeout(() => {
@@ -11,4 +12,6 @@ module.exports = function init() {
     getYoutubeData();
     getChallengeData();
   }, 1000);
-};
+}
+
+init();
