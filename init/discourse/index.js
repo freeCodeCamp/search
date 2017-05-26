@@ -4,12 +4,16 @@ const request = require('request');
 const {
   error,
   log,
-  info,
-  removeNonFormattingHTML
-  } = require('../../utils');
+  info
+} = require('../../utils');
+
+const {
+  bulkInsert
+} = require('../../elastic');
 
 const { Observable } = Rx;
-let pageCount = 0;
+
+let topicsMap = {};
 
 function apiCall(path, page) {
   const pageString = page ? `?page=${page}&_=${Date.now()}` : '';
@@ -22,22 +26,16 @@ function apiCall(path, page) {
       if (err) {
         reject(err);
       }
-      const response = JSON.parse(body);
-      resolve(response);
+      let response;
+      try {
+        response = JSON.parse(body);
+        resolve(response);
+      }
+      catch(err) {
+        reject(err);
+      }
     });
   });
-}
-
-function getCategoryList() {
-  const path = 'categories.json';
-  return Observable.fromPromise(apiCall(path, null));
-}
-
-function getTopicsList(category, page) {
-  const path = `c/${category}.json`;
-  log(`getting ${category} topics, page ${page}`);
-  return Observable.fromPromise(apiCall(path, page))
-    ;
 }
 
 function getSingleTopic(topicId) {
@@ -45,64 +43,62 @@ function getSingleTopic(topicId) {
   return Observable.fromPromise(apiCall(path, null));
 }
 
-function getBulkTopics(category, pageCount) {
-  return getTopicsList(category, pageCount)
-      .flatMap(
-        ({ topic_list: { topics, more_topics_url } }) => {
-          console.log('got %d topics', topics.length);
-          // get a topic from each id
-          Observable.zip(
-            Observable.timer(0, 300),
-            Observable.from(topics),
-            (a, b) => b)
-            .selectMany(({ id }) => {
-              info(id);
-              return getSingleTopic(id);
-            })
-            .flatMap(topic => {
-                  const {
-                    title,
-                    id,
-                    category_id,
-                    post_stream: { posts }
-                  } = topic;
-                  const body = removeNonFormattingHTML(posts[0].cooked);
-                  log(`got ${title}`);
-                  const article = {
-                    body,
-                    category_id,
-                    id,
-                    title
-                  };
-                  log(article.body);
-                  return Observable.of(article);
-                })
-            .subscribe(
-                topics => {
-                  info(`Got ${topics.length} articles ready fo indexing`);
-                },
-                e => {
-                  error(`singleTopic Error: ${e}`);
-                },
-                () => {
-                  log(`.................Completed page ${pageCount}.....................`);
-                  // if (more_topics_url) {
-                  //   pageCount ++;
-                  //   getNewTopics(updateWiki);
-                  // } 
-                });
-        });
+function getTopicsList(category, page) {
+  const path = `c/${category}.json`;
+  info(`getting ${category} topics, page ${page}`);
+  return Observable.fromPromise(apiCall(path, page))
+    .subscribe(
+      ({ topic_list: { topics, more_topics_url }}) => {
+        Observable.zip(
+          Observable.timer(0, 250),
+          Observable.from(topics),
+          (a, b) => b
+        ) 
+        .selectMany(topic => getSingleTopic(topic.id))
+        .filter(topic => topic.user_id === 15462) // camperBot.user_id === 15462
+        .subscribe(
+            topic => {
+              const {
+                title,
+                id,
+                category_id,
+                post_stream: { posts },
+                slug
+              } = topic;
+              const body = posts[0].cooked;
+              log(`got ${title}`);
+              const article = {
+                body,
+                category_id,
+                id,
+                title,
+                url: `https://forum.freecodecamp.com/t/${slug}/${id}`
+              };
+
+              topicsMap[category] = topicsMap[category] ?
+                [ ...topicsMap[category], article ] :
+                [ article ];
+            },
+            e => {
+              console.log('singleTopic Error: ', e);
+            },
+            () => {
+              log(`.................Completed ${category} page ${page}.....................`);
+              if (more_topics_url) {
+                getTopicsList(category, ++page);
+              }
+              info(`Got ${topicsMap[category].length} topics for ${category}, ready for indexing`);
+              bulkInsert({index: 'forum', type: category, documents: topicsMap[category].slice(0) });
+              topicsMap[category] = [];
+            });
+      },
+      err => {
+        error(`TopicsList Error: ${err}`);
+      });
 }
 
-function milkDiscourse(isUpdate) {
-  return getCategoryList()
-    .flatMap(({category_list: { categories }}) => categories)
-    .map(category => category.slug)
-    .map(category => {
-      getBulkTopics(category, 0)
-      .subscribe(() => {});
-    })
-    .subscribe(()=>{});
+function milkDiscourse() {
+  getTopicsList('wiki', 0);
 }
 
 module.exports = milkDiscourse;

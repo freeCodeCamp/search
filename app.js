@@ -1,3 +1,4 @@
-const milkDiscourse = require('./init/discourse');
+require('dotenv').config();
+const init = require('./init');
 
-milkDiscourse();
+init();

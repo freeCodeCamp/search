@@ -18,9 +18,12 @@
   "homepage": "https://github.com/Bouncey/freeCodeCamp-Elasticsearch#readme",
   "dependencies": {
     "chalk": "^1.1.3",
+    "dotenv": "^4.0.0",
     "elasticsearch": "^13.0.1",
     "request": "^2.81.0",
-    "rx": "^4.1.0",
-    "striptags": "^3.0.1"
+    "rx": "^4.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.19.0"
   }
 }
