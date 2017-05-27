@@ -1,5 +1,7 @@
 # freeCodeCamp Elasticsearch
 
+[![Known Vulnerabilities](https://snyk.io/test/github/bouncey/freecodecamp-elasticsearch/badge.svg)](https://snyk.io/test/github/bouncey/freecodecamp-elasticsearch)
+
 This is the development repo for a freeCodeCamp search engine
 
 ### Usage
