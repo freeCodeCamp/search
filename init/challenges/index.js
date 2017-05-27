@@ -39,6 +39,7 @@ function getChallengeData() {
               id,
               title,
               dashedName,
+              description: description ? description.join('').trim() : '',
               snippet: snippetGen(description),
               url: `https://freecodecamp.com/${block}/${dashedName}`
             };

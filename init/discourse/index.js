@@ -80,7 +80,7 @@ function getTopicsList(category, page) {
                 [ article ];
             },
             e => {
-              console.log('singleTopic Error: ', e);
+              console.trace('singleTopic Error: ', e);
             },
             () => {
               log(`.................Completed ${category} page ${page}.....................`);

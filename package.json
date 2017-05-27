@@ -21,7 +21,9 @@
     "dotenv": "^4.0.0",
     "elasticsearch": "^13.0.1",
     "request": "^2.81.0",
-    "rx": "^4.1.0"
+    "rss-parser": "^2.9.0",
+    "rx": "^4.1.0",
+    "string-hash": "^1.1.3"
   },
   "devDependencies": {
     "eslint": "^3.19.0"
