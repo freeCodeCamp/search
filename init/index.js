@@ -1,7 +1,7 @@
 require('dotenv').config();
 const Rx= require('rx');
 
-const milkDiscourse = require('./discourse');
+const getDiscourseData = require('./discourse');
 const getYoutubeData = require('./youtube');
 const getChallengeData = require('./challenges');
 const getMediumData = require('./medium');
@@ -13,14 +13,14 @@ function init() {
   deleteAll();
   const source = Observable.zip(
   // allow time for the delete Op to complete before emitting first fn
-  // stagger fn's so as not to overload `bulkIndex`
+  // stagger fn's so as not to overload elasticsearch indexing
     Observable.timer(1000, 3000),
     Observable.from(
       [
         getMediumData,
         getYoutubeData,
         getChallengeData,
-        milkDiscourse
+        getDiscourseData
       ]
       ),
     (a, b) => b

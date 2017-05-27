@@ -97,8 +97,8 @@ function getTopicsList(category, page) {
       });
 }
 
-function milkDiscourse() {
+function getDiscourseData() {
   getTopicsList('wiki', 0);
 }
 
-module.exports = milkDiscourse;
+module.exports = getDiscourseData;
