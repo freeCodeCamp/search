@@ -1,5 +1,8 @@
 const events = require('events');
 const elasticsearch = require('elasticsearch');
+const Rx = require('rx');
+
+const { Observable } = Rx;
 
 const eventEmitter = new events.EventEmitter();
 const {
@@ -66,7 +69,21 @@ function deleteAll() {
   return eventEmitter.on('connection', deleteActual);
 }
 
+function findTheThings$(query) {
+  const searchQuery = {
+    body: {
+      query: {
+        match: {
+          _all: query
+        }
+      }
+    }
+  };
+  return Observable.fromNodeCallback(client.search)(searchQuery);
+}
+
 module.exports ={
   bulkInsert,
-  deleteAll
+  deleteAll,
+  findTheThings$
 };

@@ -4,6 +4,7 @@
   "description": "A search engine for all things freeCodeCamp",
   "main": "index.js",
   "scripts": {
+    "init": "node init",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,13 +18,17 @@
   },
   "homepage": "https://github.com/Bouncey/freeCodeCamp-Elasticsearch#readme",
   "dependencies": {
+    "body-parser": "^1.17.2",
     "chalk": "^1.1.3",
     "dotenv": "^4.0.0",
     "elasticsearch": "^13.0.1",
+    "express": "^4.15.3",
+    "helmet": "^3.6.1",
     "request": "^2.81.0",
     "rss-parser": "^2.9.0",
     "rx": "^4.1.0",
-    "string-hash": "^1.1.3"
+    "string-hash": "^1.1.3",
+    "textract": "^2.1.2"
   },
   "devDependencies": {
     "eslint": "^3.19.0"
