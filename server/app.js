@@ -6,7 +6,7 @@ const Rx = require('rx');
 const { Observable } = Rx;
 
 
-const { findTheThings$ } = require('../elastic');
+const { findTheThings } = require('../elastic');
 
 const app = express();
 
@@ -16,10 +16,14 @@ app.use(bodyParser.json());
 
 app.get('/search', (req, res) => {
   const { q: query } = req.query;
-  findTheThings$(query)
+  Observable.fromPromise(findTheThings(query))
     .subscribe(
       hits => {
         res.json(hits).end();
+      },
+      err => {
+        console.error(err);
+        res.json(err).end();
       }
     );
 });
