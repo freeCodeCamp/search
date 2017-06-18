@@ -98,7 +98,7 @@ function getTopicsList(category, page) {
 }
 
 function getDiscourseData() {
-  getTopicsList('guides', 0);
+  getTopicsList('guide', 0);
 }
 
 module.exports = getDiscourseData;
