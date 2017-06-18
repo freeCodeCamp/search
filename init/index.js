@@ -1,10 +1,16 @@
 require('dotenv').config();
 const Rx= require('rx');
 
+/*
+* Getting Medium Articles is causing problems
+* right now. It is now a TODO
+*/
+
+
 const getDiscourseData = require('./discourse');
 const getYoutubeData = require('./youtube');
 const getChallengeData = require('./challenges');
-const getMediumData = require('./medium');
+// const getMediumData = require('./medium');
 const { deleteAll } = require('../elastic');
 
 const { Observable } = Rx;
@@ -17,7 +23,7 @@ function init() {
     Observable.timer(1000, 3000),
     Observable.from(
       [
-        getMediumData,
+        // getMediumData,
         getYoutubeData,
         getChallengeData,
         getDiscourseData
