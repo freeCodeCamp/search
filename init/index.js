@@ -23,7 +23,6 @@ function init() {
     Observable.timer(1000, 3000),
     Observable.from(
       [
-        // getMediumData,
         getYoutubeData,
         getChallengeData,
         getDiscourseData
