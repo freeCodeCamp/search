@@ -76,6 +76,7 @@ function findTheThings(query) {
       }
     }
   };
+
   return new Promise((resolve, reject) => {
     client.search(searchQuery, (err, response) => {
       if (err) {
