@@ -1,4 +1,7 @@
 node_modules
+init/challenges/**/.svn
 
 .vscode
 .env
+
+!init/challenges/seed/getChallenges.js

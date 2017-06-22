@@ -4,9 +4,13 @@
 
 This is the development repo for a freeCodeCamp search engine
 
-### Usage
+### Requirements
 
 Follow the steps [here](https://www.elastic.co/start) to install Elasticsearch, Kibana and X-pack
+
+Ensure you have `svn` installed on your server, this is used to lift `/seed/challenges` from `freeCodeCamp/freeCodeCamp`
+
+### Usage
 
 Make a copy of `sample.env` to `.env`
 
