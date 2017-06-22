@@ -1,5 +1,7 @@
 const { Observable } = require('rx');
 const getChallenges = require('./seed/getChallenges');
+const svn = require('node-svn-ultimate');
+const fs = require('fs-extra');
 
 const {
   bulkInsert
@@ -24,8 +26,7 @@ function snippetGen(description) {
     + '...';
 }
 
-function getChallengeData() {
-
+function parseAndInsert() {
   Observable.from(getChallenges())
     .flatMap(
       ({ name, challenges })=> {
@@ -49,13 +50,30 @@ function getChallengeData() {
           block,
           challenges: formattedChallenges
         });
-      })
-      .subscribe(
-        (challengeBlock => {
-          const { block, challenges } = challengeBlock;
-          bulkInsert({ index: 'challenge', type: block, documents: challenges });
-        })
-      );
+      }).subscribe(
+            (challengeBlock => {
+              const { block, challenges } = challengeBlock;
+              bulkInsert({ index: 'challenge', type: block, documents: challenges });
+            })
+          );
+}
+
+function getChallengeData() {
+  fs.remove(`${process.cwd()}/init/seed/challenges`, (err) => {
+    if (err) { console.error(err); process.exit(1); }
+    console.log('challenges removed');
+    svn.commands.checkout(
+      'https://github.com/freecodecamp/freecodecamp/trunk/seed/challenges',
+      `${process.cwd()}/init/challenges/seed/challenges/`,
+      (err) => {
+        if (err) {
+          console.error(err);
+          process.exit(1);
+        }
+        console.log('got challenges');
+        parseAndInsert();
+      });
+  });
 }
 
 module.exports = getChallengeData;

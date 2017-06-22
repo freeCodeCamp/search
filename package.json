@@ -24,6 +24,7 @@
     "elasticsearch": "^13.0.1",
     "express": "^4.15.3",
     "helmet": "^3.6.1",
+    "node-svn-ultimate": "^1.0.4",
     "request": "^2.81.0",
     "rss-parser": "^2.9.0",
     "rx": "^4.1.0",
