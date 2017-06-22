@@ -1,5 +1,6 @@
 node_modules
 init/challenges/**/.svn
+init/challenges/seed/challenges
 
 .vscode
 .env
