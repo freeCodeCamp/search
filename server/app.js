@@ -2,29 +2,22 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const Rx = require('rx');
-
 const app = express();
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const morgan = require('morgan');
+
 const { findTheThings } = require('../elastic');
 const cors = require('./middleware/cors');
 
 const { Observable } = Rx;
 
-io.on('connection', function(socket) {
-  console.log('a user connected');
-  socket.on('disconnect', function() {
-    console.log('user disconnected');
-  });
-  socket.on('message', (msg) => {
-    console.log(msg);
-  });
-});
-
+app.use(morgan('Method :method - URL :url - Status :status - Response Time :response-time ms'));
 app.use(helmet());
 app.use(cors);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+app.set('view engine', 'pug');
+app.set('views', __dirname + '/views');
 
 app.get('/search', (req, res) => {
   const { q: query } = req.query;
@@ -38,6 +31,10 @@ app.get('/search', (req, res) => {
         res.json(err).end();
       }
     );
+});
+
+app.get('*', (req, res) => {
+  res.status(400).render('noRoute', { route: req.originalUrl });
 });
 
 module.exports = app;
