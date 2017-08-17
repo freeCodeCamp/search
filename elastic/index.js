@@ -1,5 +1,6 @@
 const events = require('events');
 const elasticsearch = require('elasticsearch');
+const uuidv4 = require('uuid/v4');
 
 const eventEmitter = new events.EventEmitter();
 const {
@@ -31,6 +32,19 @@ client.ping({
     eventEmitter.emit('connection');
   }
 });
+
+function singleInsert({ index, type, document }) {
+  client.create({
+    index,
+    type,
+    id: uuidv4(),
+    body: document
+  },
+  (err) => {
+    if (err) { error(JSON.stringify(err, null, 2)); }
+    log(`insterted ${document.title}`);
+  });
+}
 
 function bulkInsert({ index, type, documents }) {
   const insert = { index:  { _index: index, _type: type } };
@@ -85,12 +99,43 @@ function findTheThings(query) {
       }
       resolve(response.hits.hits);
     });
+  });
+}
 
+function getAllTitleFields() {
+  const searchQuery = {
+    index: 'challenge,guides,youtube',
+    size: 10000,
+    body: {
+      _source: ['title']
+    }
+  };
+
+  return new Promise((resolve, reject) => {
+    client.search(searchQuery, (err, response) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      const titles = response.hits.hits
+        .reduce((accu, current) => (
+          [
+            ...accu,
+            {
+              index: current._index,
+              title: current._source.title,
+              type: current._type
+            }
+          ]), []);
+      resolve(titles);
+    });
   });
 }
 
 module.exports ={
   bulkInsert,
   deleteAll,
-  findTheThings
+  findTheThings,
+  getAllTitleFields,
+  singleInsert
 };

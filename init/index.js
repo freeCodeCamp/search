@@ -7,10 +7,11 @@ const Rx= require('rx');
 */
 
 
-const getDiscourseData = require('./discourse');
+// const getDiscourseData = require('./discourse');
+// const getMediumData = require('./medium');
 const getYoutubeData = require('./youtube');
 const getChallengeData = require('./challenges');
-// const getMediumData = require('./medium');
+const getGuideArticleData = require('./guides');
 const { deleteAll } = require('../elastic');
 
 const { Observable } = Rx;
@@ -23,9 +24,9 @@ function init() {
     Observable.timer(1000, 3000),
     Observable.from(
       [
+        getGuideArticleData,
         getYoutubeData,
-        getChallengeData,
-        getDiscourseData
+        getChallengeData
       ]
       ),
     (a, b) => b

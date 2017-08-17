@@ -62,15 +62,18 @@ const challengesDir = `${process.cwd()}/init/challenges/seed/challenges/`;
 
 function getChallengeData() {
   fs.remove(challengesDir, (err) => {
-    if (err) { console.error(err); process.exit(1); }
+    if (err) {
+      console.error(err.message);
+      throw new Error(err.stack);
+    }
     console.log('challenges removed');
     svn.commands.checkout(
       'https://github.com/freecodecamp/freecodecamp/trunk/seed/challenges',
       challengesDir,
       (err) => {
         if (err) {
-          console.error(err);
-          process.exit(1);
+          console.error(err.message);
+          throw new Error(err.stack);
         }
         console.log('got challenges');
         parseAndInsert();
