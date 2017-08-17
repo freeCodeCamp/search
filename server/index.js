@@ -1,8 +1,57 @@
 require('dotenv').config();
 
+const express = require('express');
+const bodyParser = require('body-parser');
+const helmet = require('helmet');
+const Rx = require('rx');
+const app = express();
+
+const { findTheThings, getAllTitleFields } = require('../elastic');
+const cors = require('./middleware/cors');
+const { error, info, log } = require('../utils');
+
 const PORT = process.env.PORT || 7000;
-const app = require('./app');
+
+const { Observable } = Rx;
+
+let typeAheadTitles = [];
+
+app.use(helmet());
+app.use(cors);
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+app.get('/search', (req, res) => {
+  const { q: query } = req.query;
+  Observable.fromPromise(findTheThings(query))
+    .subscribe(
+      hits => {
+        res.json(hits).end();
+      },
+      err => {
+        console.error(err);
+        res.json(err).end();
+      }
+    );
+});
+
+app.get('/type-ahead', (req, res) => {
+  if (typeAheadTitles.length) {
+    res.status(200).end(JSON.stringify(typeAheadTitles));
+  } else {
+    res.status(503).end();
+  }
+
+});
 
 app.listen(PORT, () => {
-  console.log(`SEARCH server listening on port ${PORT}!`);
+  log(`API server listening on port ${PORT}!`);
+  getAllTitleFields()
+  .then(titles => {
+    typeAheadTitles = [ ...titles ];
+    info('typeAheadTitles seeded');
+  })
+  .catch(err => {
+    error(err.message);
+  });
 });
