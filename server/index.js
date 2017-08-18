@@ -39,7 +39,16 @@ app.get('/type-ahead', (req, res) => {
   if (typeAheadTitles.length) {
     res.status(200).end(JSON.stringify(typeAheadTitles));
   } else {
-    res.status(503).end();
+    getAllTitleFields()
+      .then(titles => {
+        typeAheadTitles = [ ...titles ];
+        info('typeAheadTitles seeded');
+      })
+      .catch(err => {
+        error(err.message);
+      });
+    res.status(503).end('Please try again later');
+
   }
 
 });
