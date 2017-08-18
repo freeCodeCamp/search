@@ -42,16 +42,17 @@ function buildAndInsert(dirLevel) {
     fse.readFile(filePath, 'utf-8', (err, content) => {
       if (err) { log(err); }
       const title = dirLevel
+        .slice(0)
         .split('/')
         .slice(-1)
         .join('');
       const pageTitle = titleify(title);
-      const pathArr = filePath.split('/');
-      const url = pathArr
-        .slice(pathArr.indexOf('articles'))
+
+      const url = dirLevel
+        .split('/')
+        .slice(dirLevel.indexOf('svn') + 1)
         .join('/')
         .toLowerCase();
-
       const article = {
         body: content,
         title: pageTitle,
@@ -111,7 +112,7 @@ function getGuideArticleData() {
             },
             () => {
               if (articles.length > 0) {
-                bulkInsert({ index: 'guides', type: 'article', documents: articles });
+                bulkInsert({ index: 'guides', type: 'article', documents: articles.slice(0) });
               }
             }
           );

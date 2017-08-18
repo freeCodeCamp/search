@@ -124,7 +124,8 @@ function getAllTitleFields() {
             {
               index: current._index,
               title: current._source.title,
-              type: current._type
+              type: current._type,
+              url: current._source.url
             }
           ]), []);
       resolve(titles);
