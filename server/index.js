@@ -21,6 +21,9 @@ app.use(cors);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+app.set('views', './views');
+app.set('view engine', 'pug');
+
 app.get('/search', (req, res) => {
   const { q: query } = req.query;
   Observable.fromPromise(findTheThings(query))
@@ -48,9 +51,15 @@ app.get('/type-ahead', (req, res) => {
         error(err.message);
       });
     res.status(503).end('Please try again later');
-
   }
+});
 
+app.get('*', (req, res) => {
+  res.render('noRoute', { route: req.originalUrl }).end();
+});
+
+app.post('*', (req, res) => {
+  res.json({ error: 'No mail thank you' }).end();
 });
 
 app.listen(PORT, () => {
