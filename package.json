@@ -24,6 +24,7 @@
     "elasticsearch": "^13.0.1",
     "express": "^4.15.3",
     "helmet": "^3.6.1",
+    "helmet-csp": "^2.5.1",
     "morgan": "^1.8.2",
     "node-svn-ultimate": "^1.0.4",
     "pug": "^2.0.0-rc.2",
