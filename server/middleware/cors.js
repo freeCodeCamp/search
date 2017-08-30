@@ -16,12 +16,12 @@ module.exports = csp({
   // Specify directives as normal.
   directives: {
     defaultSrc: allowedOrigins,
-    scriptSrc: [],
-    styleSrc: [],
-    fontSrc: [],
-    imgSrc: [],
-    sandbox: [],
-    objectSrc: [],
+    scriptSrc: ["'none'"],
+    styleSrc: ["'none'"],
+    fontSrc: ["'none'"],
+    imgSrc: ["'none'"],
+    sandbox: ["'none'"],
+    objectSrc: ["'none'"],
     // upgradeInsecureRequests: true ** Wait for https **
   },
 
