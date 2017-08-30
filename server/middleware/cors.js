@@ -20,7 +20,7 @@ module.exports = csp({
     styleSrc: ["'none'"],
     fontSrc: ["'none'"],
     imgSrc: ["'none'"],
-    sandbox: ["'none'"],
+    sandbox: true,
     objectSrc: ["'none'"],
     // upgradeInsecureRequests: true ** Wait for https **
   },
