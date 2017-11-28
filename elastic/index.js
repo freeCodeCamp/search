@@ -3,11 +3,8 @@ const elasticsearch = require('elasticsearch');
 const uuidv4 = require('uuid/v4');
 
 const eventEmitter = new events.EventEmitter();
-const {
-  error,
-  log,
-  info
-} = require('../utils');
+const promisify = require('promisify-event');
+const { log } = require('../utils');
 const { ELASTIC_AUTH, ELASTIC_HOST } = process.env;
 
 let connected = false;
@@ -21,11 +18,11 @@ const client = new elasticsearch.Client({
   ]
 });
 
-client.ping({ 
-  requestTimeout: 1000
+client.ping({
+  requestTimeout: 5000
 }, function (error) {
   if (error) {
-    console.trace('elasticsearch cluster is down!');
+    log('elasticsearch cluster is down!', 'red');
   } else {
     log('All is well with the cluster');
     connected = true;
@@ -33,16 +30,17 @@ client.ping({
   }
 });
 
-function singleInsert({ index, type, document }) {
+function singleInsert({ index, type, document, id }) {
   client.create({
     index,
     type,
-    id: uuidv4(),
-    body: document
+    body: document,
+    id
   },
   (err) => {
-    if (err) { error(JSON.stringify(err, null, 2)); }
-    log(`insterted ${document.title}`);
+    if (err) { log(`${err.message}
+    ${JSON.stringify(document, null, 2)}
+    `, 'red'); }
   });
 }
 
@@ -57,9 +55,9 @@ function bulkInsert({ index, type, documents }) {
   }, []);
   client.bulk({
     body: request
-  }, 
+  },
   (err) => {
-    if (err) { error(JSON.stringify(err, null, 2)); }
+    if (err) { log(err.message); }
   });
 }
 
@@ -68,7 +66,7 @@ function bulkUpsert({ index, type, documents }) {
     update:
     {
       _index: index,
-      _type: type, 
+      _type: type,
       _retry_on_conflict: 3
     }
   };
@@ -86,34 +84,39 @@ function bulkUpsert({ index, type, documents }) {
     ), []);
   client.bulk({
     body: request
-  }, 
+  },
   (err) => {
-    if (err) { error(JSON.stringify(err, null, 2)); }
+    if (err) { log(err.message); }
   });
 }
 
 function deleteActual() {
-  error('DELETING all documents from the cluster');
-  client.indices.delete(
-    { index: '_all' },
-    (err, response) => {
-      if (err) {
-        log(JSON.stringify(err, null, 2));
-        return;
-      }
-      info(JSON.stringify(response, null, 2));
-      return Promise.resolve();
-    });
+  log('DELETING all documents from the cluster', 'magenta');
+  return new Promise((resolve, reject) => {
+    client.indices.delete(
+      { index: '_all' },
+      (err, response) => {
+        if (err) { log(err.message); reject(err.message); }
+        log(JSON.stringify(response, null, 2), 'blue');
+        resolve();
+      });
+  });
 }
 
 function deleteAll() {
-  if (connected) {
-    return deleteActual();
-  }
-  return eventEmitter.on('connection', deleteActual);
+  return new Promise((resolve, reject) => {
+    if (connected) {
+      deleteActual().then(resolve).catch(reject);
+    }
+    return promisify(eventEmitter, 'connection')
+      .then(deleteActual)
+      .then(resolve)
+      .catch(err => { log(err.message, 'red'); reject(err.message); });
+  });
 }
 
 function findTheThings(query) {
+  log(`(query): ${JSON.stringify(query)}`, 'magenta');
   const searchQuery = {
     body: {
       query: {
@@ -135,33 +138,43 @@ function findTheThings(query) {
   });
 }
 
-function getAllTitleFields() {
-  const searchQuery = {
-    index: 'challenge,guides,youtube',
-    size: 10000,
-    body: {
-      _source: [ 'title', 'url' ]
-    }
-  };
-
+function incrementViewCount(id) {
   return new Promise((resolve, reject) => {
-    client.search(searchQuery, (err, response) => {
+    client.update({
+      index: 'blog',
+      type: 'story',
+      id,
+      body: {
+        script: 'ctx._source.views += 1',
+        upsert: {
+          views: 1
+        }
+      }
+    }, function (err) {
       if (err) {
-        reject(err);
+        log(err.message, 'red');
+        reject(false);
         return;
       }
-      const titles = response.hits.hits
-        .reduce((accu, current) => (
-          [
-            ...accu,
-            {
-              index: current._index,
-              title: current._source.title,
-              type: current._type,
-              url: current._source.url
-            }
-          ]), []);
-      resolve(titles);
+      resolve(true);
+      return;
+    });
+  });
+}
+
+function getViewCount(id) {
+  return new Promise((resolve, reject) => {
+    client.get({
+      index: 'blog',
+      type: 'story',
+      id,
+      _source: [ 'views' ]
+    }, function (err, response) {
+      if (err) {
+        log(err.message, 'red');
+        reject(err.message);
+      }
+      resolve(response._source.views);
     });
   });
 }
@@ -171,6 +184,7 @@ module.exports ={
   bulkUpsert,
   deleteAll,
   findTheThings,
-  getAllTitleFields,
+  getViewCount,
+  incrementViewCount,
   singleInsert
 };

@@ -1,0 +1,79 @@
+const path = require('path');
+const svn = require('node-svn-ultimate');
+const fse = require('fs-extra');
+const matter = require( 'gray-matter');
+const { Observable } = require( 'rx');
+const { bulkInsert } = require( '../../elastic');
+const { log, readDir } = require( '../../utils');
+
+const viewMap = fse.readFileSync(path.resolve(__dirname, './views.txt'), 'utf8')
+  .split('\n')
+  .reduce((accu, current) => {
+    const [ url, count ] = current.split(', ');
+    const key = url.split('/').slice(-1);
+    return {
+      ...accu,
+      [key]: parseInt(count, 10)
+    };
+  }, {});
+
+exports.viewMap = viewMap;
+
+const storiesDir = path.resolve(__dirname, './svn');
+let stories = [];
+async function buildAndInsert(file) {
+  const fileContent = await fse.readFileSync(file, 'utf8');
+  const fileData = matter(fileContent);
+  const story = {
+    content: fileData.content,
+    data: { ...fileData.data },
+    views: viewMap[fileData.data.id]
+  };
+  stories = [ ...stories, story ];
+  if (stories.length >= 150) {
+    bulkInsert({ index: 'news', type: 'story', documents: stories.slice(0) });
+    stories = [];
+  }
+  return;
+}
+
+exports.getStoryData = () => {
+  fse.remove(storiesDir, (err) => {
+    if (err) {
+      log(`(news): ${err.message}`, 'yellow');
+      throw new Error(err.stack);
+    }
+    svn.commands.checkout(
+      'https://github.com/freecodecamp/news/trunk/src/pages',
+      storiesDir,
+      (err) => {
+        if (err) {
+          log(err.message, 'red');
+          throw new Error(err.stack);
+        }
+        Observable.zip(
+          Observable.timer(0, 750),
+          Observable.from(readDir(storiesDir, true)).bufferWithCount(100),
+          (a, b) => b
+        )
+          .flatMap(fileNames => {
+            return Observable.from(fileNames.map(name => `${storiesDir}/${name}`));
+          })
+          .subscribe(
+            file => {
+              buildAndInsert(file);
+            },
+            err => {
+              log(`(news): ${err.message}`, 'yellow');
+            },
+            () => {
+              if (stories.length > 0) {
+                bulkInsert({ index: 'news', type: 'story', documents: stories.slice(0) });
+                stories = [];
+              }
+              log('(news) COMPLETE', 'magenta');
+            }
+          );
+      });
+  });
+};

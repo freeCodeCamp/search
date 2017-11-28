@@ -4,6 +4,7 @@ const request = require('request');
 const {
   bulkInsert
 } = require('../../elastic');
+const { log } = require('../../utils');
 
 const { Observable } = Rx;
 const { YOUTUBE_SECRET } = process.env;
@@ -21,6 +22,7 @@ function getFromApi(path, page) {
         reject(err);
       }
       const response = JSON.parse(body);
+      log(JSON.stringify(response, null, 2));
       resolve(response);
     });
   });
@@ -46,20 +48,19 @@ function getYoutubeData(page, update) {
         }
       },
       (err) => {
-        console.log('Error from getPlayLists: ' + err);
+        log(`Error from getPlayLists: ${err.message}`, 'red');
       }
     );
 }
 
 function getPlayListItems(page, id, update) {
-  console.log('get playlist items', page, id);
   const playListItemsPath = `playlistItems?playlistId=${id}`;
   return Observable.fromPromise(getFromApi(playListItemsPath, page))
     .subscribe(
       ({ items, nextPageToken }) => {
-        console.log(
-          `got ${items.length} videos, ready for indexing`,
-          `other pages? ${!!nextPageToken}`
+        log(`
+        got ${items.length} videos, ready for indexing
+        other pages? ${!!nextPageToken}`
           );
         const formattedItems = items
           .map(item => {
@@ -82,7 +83,7 @@ function getPlayListItems(page, id, update) {
           });
 
         bulkInsert({index: 'youtube', type: 'videos', documents: formattedItems });
-        
+
         if (nextPageToken) {
           console.log('getting next list items page');
           getPlayListItems(nextPageToken, items[0].snippet.playlistId, update);

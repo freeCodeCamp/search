@@ -2,17 +2,13 @@ const path = require('path');
 const Rx = require('rx');
 const svn = require('node-svn-ultimate');
 const fse = require('fs-extra');
-const chalk = require('chalk');
 const hash = require('string-hash');
-
+const { log } = require('../../utils');
 const { bulkInsert, bulkUpsert } = require('../../elastic');
 const { titleify } = require('./utils');
 
 const { Observable } = Rx;
 
-function log(str, colour = 'green') {
-  console.log(chalk[colour](str));
-}
 
 const isAFileRE = /(\.md|\.jsx?|\.html?)$/;
 const shouldBeIgnoredRE = /^(\_|\.)/;
@@ -20,7 +16,7 @@ const excludedDirs = [
   'search'
 ];
 
-const articlesDir = path.resolve(__dirname, '../guides/svn');
+const articlesDir = path.resolve(__dirname, './svn');
 
 let articles = [];
 
@@ -36,15 +32,14 @@ function buildAndInsert(dirLevel) {
   fse.open(filePath, 'r', (err) => {
     if (err) {
       if (err.code === 'ENOENT') {
-        console.error(
-          'index.md does not exist in %s',
-          filePath.replace(/index\.md$/, '')
+        log(
+          `index.md does not exist in ${filePath.replace(/index\.md$/, '')}`,
+          'yellow'
           );
       }
       log(err.message, 'red');
       return;
     }
-    log(filePath);
     fse.readFile(filePath, 'utf-8', (err, content) => {
       if (err) { log(err); }
       const title = dirLevel
@@ -96,7 +91,6 @@ function getGuideArticleData() {
       console.error(err.message);
       throw new Error(err.stack);
     }
-    console.log('guides removed');
     svn.commands.checkout(
       'https://github.com/freecodecamp/guides/trunk/src/pages',
       articlesDir,

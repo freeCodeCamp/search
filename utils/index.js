@@ -1,19 +1,49 @@
+const { Observable } = require('rx');
+const fse = require('fs-extra');
 const chalk = require('chalk');
+const format = require('date-fns/format');
 
-function log(msg) {
-  console.log(chalk.green(msg));
+function log(str = 'We need something to log', colour = 'green') {
+  const TS = format(new Date().getTime(), 'DD MMM YY - HH:mm:ss Z');
+  console.log(chalk[colour](`${TS} ${str}`));
 }
 
-function info(msg) {
-  console.log(chalk.blue(msg));
+const isAFileRE = /(\.md|\.jsx?|\.html?)$/;
+const isJSRE = /\.jsx?$/;
+const shouldBeIgnoredRE = /^(\_|\.)/;
+const excludedDirs = [
+  'search'
+];
+
+function readDir(dir = __dirname, returnFiles = false) {
+  const dirContent = fse.readdirSync(dir)
+    .filter(dir => !excludedDirs.includes(dir))
+    .filter(file => !(shouldBeIgnoredRE.test(file) || isJSRE.test(file)))
+    .filter(file => file !== 'LICENSE.md');
+  return returnFiles ?
+    dirContent :
+    dirContent.filter(item => !isAFileRE.test(item));
 }
 
-function error(msg) {
-  console.log(chalk.red(msg));
+function parseDirectory(dirLevel, cb) {
+  log(dirLevel, 'white');
+  return Observable.from(readDir(dirLevel))
+    .flatMap(dir => {
+      log(`
+      ${dirLevel}
+      ${dir}
+      `, 'yellow');
+      const dirPath = `${dirLevel}/${dir}`;
+      const subDirs = readDir(dirPath);
+      if (!subDirs) {
+        cb(dirPath);
+        return Observable.of(null);
+      }
+      cb(dirPath);
+      return parseDirectory(dirPath, cb);
+    });
 }
 
-module.exports = {
-  log,
-  info,
-  error
-};
+exports.log = log;
+exports.readDir = readDir;
+exports.parseDirectory = parseDirectory;

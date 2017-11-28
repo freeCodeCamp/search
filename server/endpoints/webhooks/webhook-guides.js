@@ -1,5 +1,5 @@
 const callInit = require('./callInit');
-const { error, info, log } = require('../../../utils');
+const { log } = require('../../../utils');
 
 module.exports = function (app) {
 
@@ -9,7 +9,7 @@ module.exports = function (app) {
       !req.body.action ||
       !req.body.pull_request
     ) {
-      error('not GitHub POST request');
+      log('not GitHub POST request', 'yellow');
       res.sendStatus(400).end();
       return;
     }
@@ -23,7 +23,7 @@ module.exports = function (app) {
       callInit();
       res.sendStatus(200).end();
     } else {
-      info('webhook triggered by Github, not a merged PR');
+      log('webhook triggered by Github, not a merged PR', 'blue');
       res.sendStatus(200).end();
     }
   });

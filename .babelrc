@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    "transform-object-rest-spread",
+    "syntax-async-functions"
+  ],
+  "presets":  [
+    ["env", {
+      "targets": {
+        "node": "8.1.9"
+      }
+    }]
+  ]
+}

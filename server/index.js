@@ -7,6 +7,7 @@ const Rx = require('rx');
 const pmx = require('pmx');
 
 const webhookRouter = require('./endpoints/webhooks');
+const newsRouter = require('./endpoints/stories');
 
 const app = express();
 const probe = pmx.probe();
@@ -36,6 +37,7 @@ const { Observable } = Rx;
 
 // webhooks
 app.use('/webhook', webhookRouter);
+app.use('/news', newsRouter);
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));
