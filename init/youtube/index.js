@@ -59,10 +59,6 @@ function getPlayListItems(page, id, update) {
   return Observable.fromPromise(getFromApi(playListItemsPath, page))
     .subscribe(
       ({ items, nextPageToken }) => {
-        logger(`
-        got ${items.length} videos, ready for indexing
-        other pages? ${!!nextPageToken}`
-          );
         const formattedItems = items
           .map(item => {
             let {
