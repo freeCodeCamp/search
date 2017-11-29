@@ -1,4 +1,7 @@
-require('dotenv').config();
+const path = require('path');
+const envPath = path.resolve(__dirname, '../.env');
+
+require('dotenv').config({ path: envPath });
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -31,13 +34,16 @@ const { findTheThings } = require('../elastic');
 const cors = require('./middleware/cors');
 const { log } = require('../utils');
 
+const logger = log('server');
+
 const PORT = process.env.PORT || 7000;
 
 const { Observable } = Rx;
 
 // webhooks
 app.use('/webhook', webhookRouter);
-app.use('/news', newsRouter);
+// diasble this until the rollout of news
+// app.use('/news', newsRouter);
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -70,5 +76,5 @@ app.post('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  log(`API server listening on port ${PORT}!`);
+  logger(`API server listening on port ${PORT}!`);
 });

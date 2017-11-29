@@ -6,7 +6,7 @@ const hash = require('string-hash');
 const { log } = require('../../utils');
 const { bulkInsert, bulkUpsert } = require('../../elastic');
 const { titleify } = require('./utils');
-
+const logger = log('guides');
 const { Observable } = Rx;
 
 
@@ -32,16 +32,16 @@ function buildAndInsert(dirLevel) {
   fse.open(filePath, 'r', (err) => {
     if (err) {
       if (err.code === 'ENOENT') {
-        log(
+        logger(
           `index.md does not exist in ${filePath.replace(/index\.md$/, '')}`,
           'yellow'
           );
       }
-      log(err.message, 'red');
+      logger(err.message, 'red');
       return;
     }
     fse.readFile(filePath, 'utf-8', (err, content) => {
-      if (err) { log(err); }
+      if (err) { logger(err.message, 'red'); }
       const title = dirLevel
         .slice(0)
         .split('/')
@@ -96,10 +96,10 @@ function getGuideArticleData() {
       articlesDir,
       (err) => {
         if (err) {
-          console.error(err.message);
+          logger(err.message, 'red');
           throw new Error(err.stack);
         }
-        console.log('got guides');
+        logger('got guides');
         parseArticles(articlesDir)
           .subscribe(
             (dir)=> {
@@ -108,13 +108,14 @@ function getGuideArticleData() {
               }
             },
             err => {
-              log(err.message, 'red');
+              logger(err.message, 'red');
               throw new Error(err);
             },
             () => {
               if (articles.length > 0) {
                 bulkInsert({ index: 'guides', type: 'article', documents: articles.slice(0) });
               }
+              logger('COMPLETE');
             }
           );
       });

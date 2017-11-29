@@ -1,5 +1,6 @@
 const { getViewCount, incrementViewCount } = require('../../../elastic/index.js');
 const { log } = require('../../../utils');
+const logger = log('handle-views');
 
 module.exports = function (app) {
 
@@ -18,7 +19,7 @@ module.exports = function (app) {
       views = await getViewCount(storyId);
     }
     catch (err) {
-      log(`
+      logger(`
       (getViewCount): ${storyId}
       ${err.message}
       `, 'red');
@@ -45,7 +46,7 @@ module.exports = function (app) {
       result = await incrementViewCount(storyId);
     }
     catch (err) {
-      log(`
+      logger(`
       (incrementViewCount): ${storyId}
       ${err.message}
       `, 'red');

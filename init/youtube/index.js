@@ -6,6 +6,8 @@ const {
 } = require('../../elastic');
 const { log } = require('../../utils');
 
+const logger = log('youtube');
+
 const { Observable } = Rx;
 const { YOUTUBE_SECRET } = process.env;
 
@@ -22,7 +24,6 @@ function getFromApi(path, page) {
         reject(err);
       }
       const response = JSON.parse(body);
-      log(JSON.stringify(response, null, 2));
       resolve(response);
     });
   });
@@ -48,7 +49,7 @@ function getYoutubeData(page, update) {
         }
       },
       (err) => {
-        log(`Error from getPlayLists: ${err.message}`, 'red');
+        logger(`Error from getPlayLists: ${err.message}`, 'red');
       }
     );
 }
@@ -58,7 +59,7 @@ function getPlayListItems(page, id, update) {
   return Observable.fromPromise(getFromApi(playListItemsPath, page))
     .subscribe(
       ({ items, nextPageToken }) => {
-        log(`
+        logger(`
         got ${items.length} videos, ready for indexing
         other pages? ${!!nextPageToken}`
           );
@@ -85,12 +86,14 @@ function getPlayListItems(page, id, update) {
         bulkInsert({index: 'youtube', type: 'videos', documents: formattedItems });
 
         if (nextPageToken) {
-          console.log('getting next list items page');
           getPlayListItems(nextPageToken, items[0].snippet.playlistId, update);
         }
       },
       (err) => {
-        console.error('getPlayListItems Error: ', err);
+        logger('getPlayListItems Error: ' + err.message, 'red');
+      },
+      () => {
+        logger('COMPLETE');
       }
     );
 }

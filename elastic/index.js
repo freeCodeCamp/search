@@ -6,7 +6,7 @@ const eventEmitter = new events.EventEmitter();
 const promisify = require('promisify-event');
 const { log } = require('../utils');
 const { ELASTIC_AUTH, ELASTIC_HOST } = process.env;
-
+const logger = log('elastic');
 let connected = false;
 
 const client = new elasticsearch.Client({
@@ -22,9 +22,9 @@ client.ping({
   requestTimeout: 5000
 }, function (error) {
   if (error) {
-    log('elasticsearch cluster is down!', 'red');
+    logger('Cluster is down!', 'red');
   } else {
-    log('All is well with the cluster');
+    logger('All is well with the cluster');
     connected = true;
     eventEmitter.emit('connection');
   }
@@ -38,9 +38,7 @@ function singleInsert({ index, type, document, id }) {
     id
   },
   (err) => {
-    if (err) { log(`${err.message}
-    ${JSON.stringify(document, null, 2)}
-    `, 'red'); }
+    if (err) { logger(err.message, 'red'); }
   });
 }
 
@@ -57,7 +55,7 @@ function bulkInsert({ index, type, documents }) {
     body: request
   },
   (err) => {
-    if (err) { log(err.message); }
+    if (err) { logger(err.message, 'yellow'); }
   });
 }
 
@@ -86,18 +84,18 @@ function bulkUpsert({ index, type, documents }) {
     body: request
   },
   (err) => {
-    if (err) { log(err.message); }
+    if (err) { logger(err.message, 'magenta'); }
   });
 }
 
 function deleteActual() {
-  log('DELETING all documents from the cluster', 'magenta');
+  logger('DELETING all documents from the cluster', 'magenta');
   return new Promise((resolve, reject) => {
     client.indices.delete(
       { index: '_all' },
       (err, response) => {
-        if (err) { log(err.message); reject(err.message); }
-        log(JSON.stringify(response, null, 2), 'blue');
+        if (err) { logger(err.message, 'red'); reject(err.message); }
+        logger(JSON.stringify(response, null, 2), 'blue');
         resolve();
       });
   });
@@ -111,12 +109,12 @@ function deleteAll() {
     return promisify(eventEmitter, 'connection')
       .then(deleteActual)
       .then(resolve)
-      .catch(err => { log(err.message, 'red'); reject(err.message); });
+      .catch(err => { logger(err.message, 'red'); reject(err.message); });
   });
 }
 
 function findTheThings(query) {
-  log(`(query): ${JSON.stringify(query)}`, 'magenta');
+  log('query')(JSON.stringify(query), 'magenta');
   const searchQuery = {
     body: {
       query: {
@@ -130,6 +128,7 @@ function findTheThings(query) {
   return new Promise((resolve, reject) => {
     client.search(searchQuery, (err, response) => {
       if (err) {
+        log('query')(err.message, 'yellow');
         reject(err);
         return;
       }
@@ -141,18 +140,19 @@ function findTheThings(query) {
 function incrementViewCount(id) {
   return new Promise((resolve, reject) => {
     client.update({
-      index: 'blog',
+      index: 'news',
       type: 'story',
       id,
       body: {
-        script: 'ctx._source.views += 1',
+        script: `ctx._source.views += 1; ctx._source.newsViews += ${Date.now()}`,
         upsert: {
-          views: 1
+          views: 1,
+          newsViews: [ Date.now() ]
         }
       }
     }, function (err) {
       if (err) {
-        log(err.message, 'red');
+        logger(err.message, 'red');
         reject(false);
         return;
       }
@@ -165,13 +165,13 @@ function incrementViewCount(id) {
 function getViewCount(id) {
   return new Promise((resolve, reject) => {
     client.get({
-      index: 'blog',
+      index: 'news',
       type: 'story',
       id,
       _source: [ 'views' ]
     }, function (err, response) {
       if (err) {
-        log(err.message, 'red');
+        logger(err.message, 'red');
         reject(err.message);
       }
       resolve(response._source.views);

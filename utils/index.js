@@ -3,9 +3,11 @@ const fse = require('fs-extra');
 const chalk = require('chalk');
 const format = require('date-fns/format');
 
-function log(str = 'We need something to log', colour = 'green') {
-  const TS = format(new Date().getTime(), 'DD MMM YY - HH:mm:ss Z');
-  console.log(chalk[colour](`${TS} ${str}`));
+function log(namespace = 'AnonDebug') {
+  return (str = 'We need something to log', colour = 'green') => {
+    const TS = format(new Date().getTime(), 'DD MMM YY - HH:mm:ss Z');
+    console.log(chalk[colour](`${TS} (${namespace}): ${str}`));
+  };
 }
 
 const isAFileRE = /(\.md|\.jsx?|\.html?)$/;
@@ -26,13 +28,8 @@ function readDir(dir = __dirname, returnFiles = false) {
 }
 
 function parseDirectory(dirLevel, cb) {
-  log(dirLevel, 'white');
   return Observable.from(readDir(dirLevel))
     .flatMap(dir => {
-      log(`
-      ${dirLevel}
-      ${dir}
-      `, 'yellow');
       const dirPath = `${dirLevel}/${dir}`;
       const subDirs = readDir(dirPath);
       if (!subDirs) {

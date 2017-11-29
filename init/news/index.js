@@ -5,7 +5,7 @@ const matter = require( 'gray-matter');
 const { Observable } = require( 'rx');
 const { bulkInsert } = require( '../../elastic');
 const { log, readDir } = require( '../../utils');
-
+const logger = log('news');
 const viewMap = fse.readFileSync(path.resolve(__dirname, './views.txt'), 'utf8')
   .split('\n')
   .reduce((accu, current) => {
@@ -40,7 +40,7 @@ async function buildAndInsert(file) {
 exports.getStoryData = () => {
   fse.remove(storiesDir, (err) => {
     if (err) {
-      log(`(news): ${err.message}`, 'yellow');
+      logger(err.message, 'yellow');
       throw new Error(err.stack);
     }
     svn.commands.checkout(
@@ -48,7 +48,7 @@ exports.getStoryData = () => {
       storiesDir,
       (err) => {
         if (err) {
-          log(err.message, 'red');
+          logger(err.message, 'red');
           throw new Error(err.stack);
         }
         Observable.zip(
@@ -64,14 +64,14 @@ exports.getStoryData = () => {
               buildAndInsert(file);
             },
             err => {
-              log(`(news): ${err.message}`, 'yellow');
+              logger(err.message, 'yellow');
             },
             () => {
               if (stories.length > 0) {
                 bulkInsert({ index: 'news', type: 'story', documents: stories.slice(0) });
                 stories = [];
               }
-              log('(news) COMPLETE', 'magenta');
+              logger('COMPLETE', 'magenta');
             }
           );
       });

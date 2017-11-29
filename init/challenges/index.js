@@ -1,8 +1,10 @@
+const path = require('path');
 const { Observable } = require('rx');
 const getChallenges = require('./seed/getChallenges');
 const svn = require('node-svn-ultimate');
 const fs = require('fs-extra');
-
+const { log } = require('../../utils');
+const logger = log('challenge');
 const {
   bulkInsert,
   bulkUpsert
@@ -54,34 +56,40 @@ function parseAndInsert() {
           challenges: formattedChallenges
         });
       }).subscribe(
-            (challengeBlock => {
+            challengeBlock => {
               const { block, challenges } = challengeBlock;
               isAnUpdate ?
                 bulkUpsert({ index: 'challenge', type: block, documents: challenges }) :
                 bulkInsert({ index: 'challenge', type: block, documents: challenges });
-            })
+            },
+            err => {
+              logger(err.message, 'red');
+            },
+            () => {
+              logger('COMPLETE');
+            }
           );
 }
 
-const challengesDir = `${process.cwd()}/init/challenges/seed/challenges/`;
+const challengesDir = path.resolve(__dirname, './seed/challenges');
 
 function getChallengeData(update) {
   isAnUpdate = !!update;
   fs.remove(challengesDir, (err) => {
     if (err) {
-      console.error(err.message);
+      logger(err.message, 'red');
       throw new Error(err.stack);
     }
-    console.log('challenges removed');
+    logger('challenges removed');
     svn.commands.checkout(
       'https://github.com/freecodecamp/freecodecamp/branches/master/seed/challenges',
       challengesDir,
       (err) => {
         if (err) {
-          console.error(err.message);
+          logger(err.message, 'red');
           throw new Error(err.stack);
         }
-        console.log('got challenges');
+        logger('got challenges');
         parseAndInsert();
       });
   });
