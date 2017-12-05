@@ -46,7 +46,11 @@ async function buildAndInsert(file) {
     content: fileData.content,
     data: { ...fileData.data },
     views: id in viewMap ? viewMap[id] : 1,
+<<<<<<< 22ec002263f7cd30c77c065da0d825282c91ebb9
     newsViews: [Date.now()],
+=======
+    newsViews: [],
+>>>>>>> General refactor
     url
   };
   stories = [ ...stories, story ];
@@ -57,6 +61,7 @@ async function buildAndInsert(file) {
   return;
 }
 
+<<<<<<< 22ec002263f7cd30c77c065da0d825282c91ebb9
 function mapNewsViews() {
   return new Promise((resolve, reject) => {
     exec(cURL, (error, stdout, stderr) => {
@@ -75,6 +80,9 @@ function mapNewsViews() {
 
 exports.getStoryData = async () => {
   await mapNewsViews();
+=======
+exports.getStoryData = async () => {
+>>>>>>> General refactor
   fse.remove(storiesDir, (err) => {
     if (err) {
       logger(err.message, 'yellow');

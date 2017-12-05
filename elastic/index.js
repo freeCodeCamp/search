@@ -143,10 +143,14 @@ function incrementViewCount(id) {
       type: 'story',
       id,
       body: {
+<<<<<<< 22ec002263f7cd30c77c065da0d825282c91ebb9
         script: {
           lang: 'painless',
           inline: `ctx._source.views += 1; ctx._source.newsViews.add(${Date.now()}L);`
         }
+=======
+        script: `ctx._source.views += 1; ctx._source.newsViews += '${Date.now()}';`
+>>>>>>> General refactor
       },
       retry_on_conflict: 3
     }, function (err) {
