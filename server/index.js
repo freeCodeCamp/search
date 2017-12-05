@@ -46,17 +46,13 @@ app.use('*', (req, res, next) => {
   next();
 });
 
+
 // diasble this until the rollout of news
 // app.use('/news/v1', newsRouter);
 // search
 app.use('/search/v1', searchRouter);
 // webhooks
 app.use('/webhook', webhookRouter);
-<<<<<<< 22ec002263f7cd30c77c065da0d825282c91ebb9
-=======
-// diasble this until the rollout of news
-app.use('/news/v1', newsRouter);
->>>>>>> General refactor
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -65,15 +61,8 @@ app.use(bodyParser.json());
 app.set('views', __dirname +'/views');
 app.set('view engine', 'pug');
 
-<<<<<<< 22ec002263f7cd30c77c065da0d825282c91ebb9
-// this route is to be removed when we update guides to use the v1 route
-=======
-app.all('*', (req, res, next) => {
-	logger(req.originalUrl)
-next();
-})
 
->>>>>>> General refactor
+// this route is to be removed when we update guides to use the v1 route
 app.get('/search', cors, (req, res) => {
   const { q: query } = req.query;
   Observable.fromPromise(findTheThings(query))
