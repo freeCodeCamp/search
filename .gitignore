@@ -6,5 +6,6 @@ init/guides/svn
 .vscode
 .env
 lib/
+!lib/views/noRoute.pug
 svn/
 !init/challenges/seed/getChallenges.js
