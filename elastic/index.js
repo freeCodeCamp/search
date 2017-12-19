@@ -119,11 +119,26 @@ function findTheThings(query) {
   const searchQuery = {
     body: {
       query: {
-        fuzzy: {
-          friendlySearchString: {
-            value: query,
-            fuzziness: 1
-          }
+        bool: {
+          should: [
+            {
+              fuzzy: {
+                friendlySearchString: {
+                  value: query,
+                  fuzziness: 1
+                }
+              }
+            },
+            {
+              fuzzy: {
+                title: {
+                  value: query,
+                  fuzziness: 1,
+                  boost: 2
+                }
+              }
+            }
+          ]
         }
       },
       highlight : {
@@ -144,7 +159,6 @@ function findTheThings(query) {
         reject(err);
         return;
       }
-      console.info(response.hits.hits[1]);
       resolve(response.hits.hits);
     });
   });
